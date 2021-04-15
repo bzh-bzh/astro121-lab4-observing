@@ -147,45 +147,51 @@ def main(args):
 
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
-    # Start iterating from top to bottom through the observing plan.
-    for i in range(len(observing_plan)):
-        observing_info = observing_plan.iloc[i]
-        if observing_info['observed']:
-            continue
+    try:
+        # Start iterating from top to bottom through the observing plan.
+        for i in range(len(observing_plan)):
+            observing_info = observing_plan.iloc[i]
+            if observing_info['observed']:
+                print('Observing entry {} already observed; skipping.'.format(i))
+                continue
 
-        pointing_coord = astropy.coordinates.SkyCoord(frame='galactic', l=observing_info['l'] * u.deg, b=observing_info['b'] * u.deg)
+            pointing_coord = astropy.coordinates.SkyCoord(frame='galactic', l=observing_info['l'] * u.deg, b=observing_info['b'] * u.deg)
 
-        # 120 seconds of extra buffer time, to account for initial telescope moving + other misc stuff.
-        if not is_pointing_trackable(pointing_coord, TOTAL_INTEGRATION_TIME + 120):
-            continue
+            # 120 seconds of extra buffer time, to account for initial telescope moving + other misc stuff.
+            if not is_pointing_trackable(pointing_coord, TOTAL_INTEGRATION_TIME + 120):
+                print('Observing entry {} not above horizon; skipping.'.format(i))
+                continue
 
-        # Do initial pointing towards target.
-        point_retry(pointing_coord)
-        start_altaz = telescope.get_pointing()
-
-        # Start taking our spectra in a different thread.
-        spectra_future = executor.submit(take_all_spec, pointing_coord)
-
-        # Start the tracking loop, until the take_all_spec function finishes.
-        while not spectra_future.done():
-            time.sleep(RESLEW_TIME)
+            # Do initial pointing towards target.
+            print('Doing initial pointing.')
             point_retry(pointing_coord)
-        
-        end_altaz = telescope.get_pointing()
-        
-        jd_start, jd_end = spectra_future.result()
-        reduce_and_move_spectra(output_folder, pointing_coord)
+            start_altaz = telescope.get_pointing()
 
-        # Now that everything's successfully completed, we record that we completed this observation in the observing_plan,
-        # and resave the DataFrame to the CSV.
-        observing_plan.at[i, 'observed'] = 1
-        observing_plan.at[i, 'jd_start'] = jd_start
-        observing_plan.at[i, 'jd_end'] = jd_end
-        observing_plan.at[i, 'alt_start'] = start_altaz[0]
-        observing_plan.at[i, 'az_start'] = start_altaz[1]
-        observing_plan.at[i, 'alt_end'] = end_altaz[0]
-        observing_plan.at[i, 'az_end'] = end_altaz[1]
-        observing_plan.to_csv(args.observing_plan_path)
+            # Start taking our spectra in a different thread.
+            spectra_future = executor.submit(take_all_spec, pointing_coord)
+
+            # Start the tracking loop, until the take_all_spec function finishes.
+            while not spectra_future.done():
+                time.sleep(RESLEW_TIME)
+                point_retry(pointing_coord)
+            
+            end_altaz = telescope.get_pointing()
+            
+            jd_start, jd_end = spectra_future.result()
+            reduce_and_move_spectra(output_folder, pointing_coord)
+
+            # Now that everything's successfully completed, we record that we completed this observation in the observing_plan,
+            # and resave the DataFrame to the CSV.
+            observing_plan.at[i, 'observed'] = 1
+            observing_plan.at[i, 'jd_start'] = jd_start
+            observing_plan.at[i, 'jd_end'] = jd_end
+            observing_plan.at[i, 'alt_start'] = start_altaz[0]
+            observing_plan.at[i, 'az_start'] = start_altaz[1]
+            observing_plan.at[i, 'alt_end'] = end_altaz[0]
+            observing_plan.at[i, 'az_end'] = end_altaz[1]
+            observing_plan.to_csv(args.observing_plan_path)
+    finally:
+        telescope.stow()
 
 
 
