@@ -195,7 +195,7 @@ def main(args):
             observing_plan.at[i, 'az_start'] = start_altaz[1]
             observing_plan.at[i, 'alt_end'] = end_altaz[0]
             observing_plan.at[i, 'az_end'] = end_altaz[1]
-            observing_plan.to_csv(args.observing_plan_path)
+            observing_plan.to_csv(args.observing_plan_path, index=False)
     finally:
         telescope.stow()
 
