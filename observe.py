@@ -142,6 +142,12 @@ def main(args):
     observing_plan = pd.read_csv(args.observing_plan_path)
     output_folder = args.output_folder
 
+    # Create temp folder and output folder if they don't exist.
+    if not os.path.exists(TMP_FOLDER):
+        os.makedirs(TMP_FOLDER)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
     # Make sure our observing plan has all the required columns.
     assert all(col in observing_plan.columns for col in OBSERVING_PLAN_REQ_COLS)
 
