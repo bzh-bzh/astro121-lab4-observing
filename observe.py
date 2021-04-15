@@ -84,7 +84,7 @@ def take_spec(noise: bool, lo_freq: float, int_time: float, coord: astropy.coord
         noise_gen.off()
     lo.set_frequency(lo_freq / 2, 'MHz')
     # TODO: record galactic coordinates.
-    spec.read_spec(output_fits_path, n_spec, (coord.l, coord.b), 'ga')
+    spec.read_spec(output_fits_path, n_spec, (coord.l.value, coord.b.value), 'ga')
     # Add the LO frequency to the FITS file.
     with fits.open(output_fits_path, mode='update') as hdul:
         hdul[0].header.set('LO_FREQ', value=lo_freq, comment='LO frequency in MHz')
@@ -148,12 +148,12 @@ def main(args):
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
     # Start iterating from top to bottom through the observing plan.
-    for i in len(observing_plan):
+    for i in range(len(observing_plan)):
         observing_info = observing_plan.iloc[i]
         if observing_info['observed']:
             continue
 
-        pointing_coord = astropy.coordinates.SkyCoord(l=observing_info['l'] * u.deg, b=observing_info['b'] * u.deg)
+        pointing_coord = astropy.coordinates.SkyCoord(frame='galactic', l=observing_info['l'] * u.deg, b=observing_info['b'] * u.deg)
 
         # 120 seconds of extra buffer time, to account for initial telescope moving + other misc stuff.
         if not is_pointing_trackable(pointing_coord, TOTAL_INTEGRATION_TIME + 120):
