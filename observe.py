@@ -46,6 +46,9 @@ def main(args):
         lo.set_frequency(lo_freq / 2, 'MHz')
         # TODO: record galactic coordinates.
         spec.read_spec(output_fits_path, n_spec, (0, 0), 'eq')
+        # Add the LO frequency to the FITS file.
+        with fits.open(output_fits_path, mode='update') as hdul:
+            hdul[0].header.set('LO_FREQ', value=lo_freq, comment='LO frequency in MHz')
     
     # Take frequency-switched spectrum.
     take_spec(False, BASE_LO_FREQ - SWITCHING_DFREQ, os.path.join(output_folder, 'switched.fits'))
