@@ -207,6 +207,7 @@ def main(args):
             observing_plan.at[i, 'az_end'] = end_altaz[1]
             observing_plan.to_csv(args.observing_plan_path, index=False)
     finally:
+        print('Stowing telescope.')
         telescope.stow()
 
 
