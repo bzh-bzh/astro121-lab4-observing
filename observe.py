@@ -91,6 +91,16 @@ def take_spec(noise: bool, lo_freq: float, int_time: float, coord: astropy.coord
 
 # Take all the spectra we need.
 def take_all_spec(coord: astropy.coordinates.SkyCoord) -> Tuple[float, float]:
+    num_spectrometer_retries = 0
+    while True:
+        if num_spectrometer_retries >= 5:
+            raise IOError
+        try:
+            spec.check_connected()
+            break
+        except IOError:
+            num_spectrometer_retries += 1
+
     jd_start = Time.now().jd
     # Take frequency-switched spectrum.
     take_spec(False, BASE_LO_FREQ + SWITCHING_DFREQ, SWITCHED_INTEGRATION_TIME, coord, os.path.join(TMP_FOLDER, 'switched.fits'))
