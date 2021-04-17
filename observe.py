@@ -99,6 +99,7 @@ def take_all_spec(coord: astropy.coordinates.SkyCoord) -> Tuple[float, float]:
             spec.check_connected()
             break
         except IOError:
+            spec = ugradio.leusch.Spectrometer()
             num_spectrometer_retries += 1
 
     jd_start = Time.now().jd
