@@ -1,2 +1,2 @@
-l,b,observed,jd_start,jd_end,alt_start,az_start,alt_end,az_end
+ra,dec,observed,jd_start,jd_end,alt_start,az_start,alt_end,az_end
 120,0,0,,,,,,

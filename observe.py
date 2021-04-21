@@ -50,7 +50,7 @@ RESLEW_TIME = 10
 
 TMP_FOLDER = '/tmp/5quist/'
 
-OBSERVING_PLAN_REQ_COLS = ['l', 'b', 'observed', 'jd_start', 'jd_end', 'alt_start', 'az_start', 'alt_end', 'az_end']
+OBSERVING_PLAN_REQ_COLS = ['ra', 'dec', 'observed', 'jd_start', 'jd_end', 'alt_start', 'az_start', 'alt_end', 'az_end']
 
 telescope = ugradio.leusch.LeuschTelescope()
 noise_gen = ugradio.leusch.LeuschNoise()
@@ -83,7 +83,6 @@ def take_spec(noise: bool, lo_freq: float, int_time: float, coord: astropy.coord
     else:
         noise_gen.off()
     lo.set_frequency(lo_freq / 2, 'MHz')
-    # TODO: record galactic coordinates.
     spec.read_spec(output_fits_path, n_spec, (coord.l.value, coord.b.value), 'ga')
     # Add the LO frequency to the FITS file.
     with fits.open(output_fits_path, mode='update') as hdul:
@@ -172,7 +171,8 @@ def main(args):
                 print('Observing entry {} already observed; skipping.'.format(i))
                 continue
 
-            pointing_coord = astropy.coordinates.SkyCoord(frame='galactic', l=observing_info['l'] * u.deg, b=observing_info['b'] * u.deg)
+            pointing_coord = astropy.coordinates.SkyCoord(ra=observing_info['ra'] * u.deg, dec=observing_info['dec'] * u.deg)
+            pointing_coord = pointing_coord.galactic
 
             # 120 seconds of extra buffer time, to account for initial telescope moving + other misc stuff.
             if not is_pointing_trackable(pointing_coord, TOTAL_INTEGRATION_TIME + 120):
