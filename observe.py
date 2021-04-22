@@ -131,12 +131,12 @@ def reduce_and_move_spectra(base_folder: str, coord: astropy.coordinates.SkyCoor
 def is_pointing_trackable(coord: astropy.coordinates.SkyCoord, expected_int_time: float) -> bool:
     aa_now = AltAz(location=DISH_LOCATION, obstime=Time.now()) #making an AltAz frame for our coord
     altaz_now = coord.transform_to(aa_now)
-    az_now = altaz_now.az
-    alt_now = altaz_now.alt
+    az_now = altaz_now.az.deg
+    alt_now = altaz_now.alt.deg
     aa_int = AltAz(location=DISH_LOCATION, obstime=(Time.now() + TimeDelta(expected_int_time * u.second)))
     altaz_int = coord.transform_to(aa_int)
-    az_int = altaz_int.az
-    alt_int = altaz_int.alt
+    az_int = altaz_int.az.deg
+    alt_int = altaz_int.alt.deg
     ALT_MAX = 85
     ALT_MIN = 14
     #######
@@ -213,6 +213,8 @@ def main(args):
 
             pointing_coord = astropy.coordinates.SkyCoord(ra=observing_info['ra'] * u.deg, dec=observing_info['dec'] * u.deg)
             pointing_coord = pointing_coord.galactic
+
+            print(f'Observing pointing #{i} at l = {pointing_coord.l.deg}, b = {pointing_coord.b.deg}')
 
             # 120 seconds of extra buffer time, to account for initial telescope moving + other misc stuff.
             if not is_pointing_trackable(pointing_coord, TOTAL_INTEGRATION_TIME + 120):
