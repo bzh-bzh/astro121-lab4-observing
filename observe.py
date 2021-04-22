@@ -189,10 +189,7 @@ def main(args):
         print('Sleeping until start time.')
         time.sleep(args.start_time * 60 * 60)
 
-    if args.max_time:
-        max_runtime = Time.now() + TimeDelta(args.max_time * u.hour)
-    else:
-        max_runtime = Time.now() + TimeDelta(u.year)
+    max_runtime = Time.now() + TimeDelta(args.max_time * u.hour)
 
     # Create temp folder and output folder if they don't exist.
     if not os.path.exists(TMP_FOLDER):
@@ -206,55 +203,57 @@ def main(args):
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
     try:
-        # Start iterating from top to bottom through the observing plan.
-        for i in range(len(observing_plan)):
-            # End the script early if we surpass the maximum runtime.
-            if Time.now() > max_runtime:
-                break
+        # Keep going through the plan until our max runtime is reached.
+        while Time.now() <= max_runtime:
+            # Start iterating from top to bottom through the observing plan.
+            for i in range(len(observing_plan)):
+                # End the script early if we surpass the maximum runtime.
+                if Time.now() > max_runtime:
+                    break
 
-            observing_info = observing_plan.iloc[i]
-            if observing_info['observed']:
-                print('Observing entry {} already observed; skipping.'.format(i))
-                continue
+                observing_info = observing_plan.iloc[i]
+                if observing_info['observed']:
+                    print('Observing entry {} already observed; skipping.'.format(i))
+                    continue
 
-            pointing_coord = astropy.coordinates.SkyCoord(ra=observing_info['ra'] * u.deg, dec=observing_info['dec'] * u.deg)
-            pointing_coord = pointing_coord.galactic
+                pointing_coord = astropy.coordinates.SkyCoord(ra=observing_info['ra'] * u.deg, dec=observing_info['dec'] * u.deg)
+                pointing_coord = pointing_coord.galactic
 
-            print(f'Observing pointing #{i} at l = {pointing_coord.l.deg}, b = {pointing_coord.b.deg}')
+                print(f'Observing pointing #{i} at l = {pointing_coord.l.deg}, b = {pointing_coord.b.deg}')
 
-            # 120 seconds of extra buffer time, to account for initial telescope moving + other misc stuff.
-            if not is_pointing_trackable(pointing_coord, TOTAL_INTEGRATION_TIME + 120):
-                print('Observing entry {} not above horizon; skipping.'.format(i))
-                continue
+                # 120 seconds of extra buffer time, to account for initial telescope moving + other misc stuff.
+                if not is_pointing_trackable(pointing_coord, TOTAL_INTEGRATION_TIME + 120):
+                    print('Observing entry {} not above horizon; skipping.'.format(i))
+                    continue
 
-            # Do initial pointing towards target.
-            print('Doing initial pointing.')
-            point_retry(pointing_coord)
-            start_altaz = telescope.get_pointing()
-
-            # Start taking our spectra in a different thread.
-            spectra_future = executor.submit(take_all_spec, pointing_coord)
-
-            # Start the tracking loop, until the take_all_spec function finishes.
-            while not spectra_future.done():
-                time.sleep(RESLEW_TIME)
+                # Do initial pointing towards target.
+                print('Doing initial pointing.')
                 point_retry(pointing_coord)
-            
-            end_altaz = telescope.get_pointing()
-            
-            jd_start, jd_end = spectra_future.result()
-            reduce_and_move_spectra(output_folder, pointing_coord)
+                start_altaz = telescope.get_pointing()
 
-            # Now that everything's successfully completed, we record that we completed this observation in the observing_plan,
-            # and resave the DataFrame to the CSV.
-            observing_plan.at[i, 'observed'] = 1
-            observing_plan.at[i, 'jd_start'] = jd_start
-            observing_plan.at[i, 'jd_end'] = jd_end
-            observing_plan.at[i, 'alt_start'] = start_altaz[0]
-            observing_plan.at[i, 'az_start'] = start_altaz[1]
-            observing_plan.at[i, 'alt_end'] = end_altaz[0]
-            observing_plan.at[i, 'az_end'] = end_altaz[1]
-            observing_plan.to_csv(args.observing_plan_path, index=False)
+                # Start taking our spectra in a different thread.
+                spectra_future = executor.submit(take_all_spec, pointing_coord)
+
+                # Start the tracking loop, until the take_all_spec function finishes.
+                while not spectra_future.done():
+                    time.sleep(RESLEW_TIME)
+                    point_retry(pointing_coord)
+                
+                end_altaz = telescope.get_pointing()
+                
+                jd_start, jd_end = spectra_future.result()
+                reduce_and_move_spectra(output_folder, pointing_coord)
+
+                # Now that everything's successfully completed, we record that we completed this observation in the observing_plan,
+                # and resave the DataFrame to the CSV.
+                observing_plan.at[i, 'observed'] = 1
+                observing_plan.at[i, 'jd_start'] = jd_start
+                observing_plan.at[i, 'jd_end'] = jd_end
+                observing_plan.at[i, 'alt_start'] = start_altaz[0]
+                observing_plan.at[i, 'az_start'] = start_altaz[1]
+                observing_plan.at[i, 'alt_end'] = end_altaz[0]
+                observing_plan.at[i, 'az_end'] = end_altaz[1]
+                observing_plan.to_csv(args.observing_plan_path, index=False)
     finally:
         print('Stowing telescope.')
         telescope.stow()
@@ -265,7 +264,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('observing_plan_path', help='Path of observing plan CSV file.')
     parser.add_argument('output_folder', help='Path of output data folder.')
-    parser.add_argument('--max-time', help='Max script runtime in hours.', type=float)
+    parser.add_argument('max_time', help='Max script runtime in hours.', type=float)
     parser.add_argument('--start-time', help='Starting time, in hours from now.', type=float)
     args = parser.parse_args()
     main(args)
