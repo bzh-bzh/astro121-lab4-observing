@@ -43,8 +43,8 @@ SWITCHING_DFREQ = 2.369 # Corresponds to moving the spectrum to the left by 500 
 DISH_LOCATION = astropy.coordinates.EarthLocation(lat=ugradio.leo.lat * u.deg, lon=ugradio.leo.lon * u.deg, height=ugradio.leo.alt * u.meter)
 
 NOISE_INTEGRATION_TIME = 60 # seconds.
-NONOISE_INTEGRATION_TIME = 600
-SWITCHED_INTEGRATION_TIME = 60
+NONOISE_INTEGRATION_TIME = 300
+SWITCHED_INTEGRATION_TIME = 300
 TOTAL_INTEGRATION_TIME = NOISE_INTEGRATION_TIME + NONOISE_INTEGRATION_TIME + SWITCHED_INTEGRATION_TIME
 
 RESLEW_TIME = 10
