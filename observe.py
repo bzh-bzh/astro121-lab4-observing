@@ -137,10 +137,12 @@ def is_pointing_trackable(coord: astropy.coordinates.SkyCoord, expected_int_time
     altaz_int = coord.transform_to(aa_int)
     az_int = altaz_int.az.deg
     alt_int = altaz_int.alt.deg
-    ALT_MAX = 85
-    ALT_MIN = 14
+    ALT_MAX = ugradio.leusch.ALT_MAX
+    ALT_MIN = ugradio.leusch.ALT_MIN
+    AZ_MAX = ugradio.leusch.AZ_MAX
+    AZ_MIN = ugradio.leusch.AZ_MIN
     #######
-    if (-5 <= az_int <= 365) and (-5 <= az_now <= 365):
+    if (AZ_MIN <= az_int <= AZ_MAX) and (AZ_MIN <= az_now <= AZ_MAX):
         if (ALT_MIN <= alt_int <= ALT_MAX) and (ALT_MIN <= alt_now <= ALT_MAX):
             print("you're good to go, pardner! yeehaw!")
             return True
@@ -148,9 +150,9 @@ def is_pointing_trackable(coord: astropy.coordinates.SkyCoord, expected_int_time
             print(f"wait! we won't be able to track that for the whole integration! look for a different altitude.")
         if not (ALT_MIN <= alt_now <= ALT_MAX):
             print(f"we can't look at this right now! the current altitude is outside our Leuschner limit!")
-    if not (-5 <= az_int <= 365):
+    if not (AZ_MIN <= az_int <= AZ_MAX):
         print(f"that won't be in our azimuthal range for the whole integration!")
-    if not (-5 <= az_now <= 365):
+    if not (AZ_MIN <= az_now <= AZ_MAX):
         print(f"that's outside our azimuthal range right now. try something else!")
     
     return False
