@@ -183,6 +183,10 @@ def main(args):
     observing_plan = pd.read_csv(args.observing_plan_path)
     output_folder = args.output_folder
 
+    if args.start_time:
+        print('Sleeping until start time.')
+        time.sleep(args.start_time * 60 * 60)
+
     if args.max_time:
         max_runtime = Time.now() + TimeDelta(args.max_time * u.hour)
     else:
@@ -260,5 +264,6 @@ if __name__ == '__main__':
     parser.add_argument('observing_plan_path', help='Path of observing plan CSV file.')
     parser.add_argument('output_folder', help='Path of output data folder.')
     parser.add_argument('--max-time', help='Max script runtime in hours.', type=float)
+    parser.add_argument('--start-time', help='Starting time, in hours from now.', type=float)
     args = parser.parse_args()
     main(args)
