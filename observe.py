@@ -1,6 +1,6 @@
 import ugradio
 from astropy.io import fits
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 import astropy.coordinates
 from astropy.coordinates import AltAz
 import astropy.units as u
@@ -129,11 +129,11 @@ def reduce_and_move_spectra(base_folder: str, coord: astropy.coordinates.SkyCoor
 # Determines whether the specified coordinate pointing will be within the telescope's moving-limits for expected_int_time (in s).
 # Could also try to exclude the hills in the north (< 30 deg altitude).
 def is_pointing_trackable(coord: astropy.coordinates.SkyCoord, expected_int_time: float) -> bool:
-    aa_now = AltAz(location = DISH_LOCATION, time = Time.now()) #making an AltAz frame for our coord
+    aa_now = AltAz(location=DISH_LOCATION, obstime=Time.now()) #making an AltAz frame for our coord
     altaz_now = coord.transform_to(aa_now)
     az_now = altaz_now.az
     alt_now = altaz_now.alt
-    aa_int = AltAz(location = DISH_LOCATION, time = (Time.now() + expected_int_time * u.second))
+    aa_int = AltAz(location=DISH_LOCATION, obstime=(Time.now() + TimeDelta(expected_int_time * u.second)))
     altaz_int = coord.transform_to(aa_int)
     az_int = altaz_int.az
     alt_int = altaz_int.alt
@@ -184,9 +184,9 @@ def main(args):
     output_folder = args.output_folder
 
     if args.max_time:
-        max_runtime = Time.now() + args.max_time * u.hour
+        max_runtime = Time.now() + TimeDelta(args.max_time * u.hour)
     else:
-        max_runtime = Time.now() + u.year
+        max_runtime = Time.now() + TimeDelta(u.year)
 
     # Create temp folder and output folder if they don't exist.
     if not os.path.exists(TMP_FOLDER):
