@@ -116,11 +116,11 @@ def take_all_spec(coord: astropy.coordinates.SkyCoord) -> Tuple[float, float]:
 # label the subfolder after the l,b of a coord
 def reduce_and_move_spectra(base_folder: str, coord: astropy.coordinates.SkyCoord):
     sf_name = coord.to_string() #turns l,b into a usable string
-    sf_path = base_folder +'/'+ sf_name
+    sf_path = os.path.join(base_folder, sf_name)
     os.mkdirs(sf_path) #makes a directory to sf_path
     for in_fits_path in os.listdir(TMP_FOLDER):
         if in_fits_path.endswith('.fits'):
-            reduce_spectra(in_fits_path, sf_path)
+            reduce_spectra(os.path.join(TMP_FOLDER, in_fits_path), os.path.join(sf_path, in_fits_path))
             continue
         else:
             continue
@@ -133,7 +133,7 @@ def is_pointing_trackable(coord: astropy.coordinates.SkyCoord, expected_int_time
     altaz_now = coord.transform_to(aa_now)
     az_now = altaz_now.az
     alt_now = altaz_now.alt
-    aa_int = AltAz(location = DISH_LOCATION, time = (Time.now() + expected_int_time))
+    aa_int = AltAz(location = DISH_LOCATION, time = (Time.now() + expected_int_time * u.second))
     altaz_int = coord.transform_to(aa_int)
     az_int = altaz_int.az
     alt_int = altaz_int.alt
@@ -144,13 +144,13 @@ def is_pointing_trackable(coord: astropy.coordinates.SkyCoord, expected_int_time
         if (ALT_MIN <= alt_int <= ALT_MAX) and (ALT_MIN <= alt_now <= ALT_MAX):
             print("you're good to go, pardner! yeehaw!")
             return True
-        if !(ALT_MIN <= alt_int <= ALT_MAX):
+        if not (ALT_MIN <= alt_int <= ALT_MAX):
             print(f"wait! we won't be able to track that for the whole integration! look for a different altitude.")
-        if !(ALT_MIN <= alt_now <= ALT_MAX):
+        if not (ALT_MIN <= alt_now <= ALT_MAX):
             print(f"we can't look at this right now! the current altitude is outside our Leuschner limit!")
-    if !(-5 <= az_int <= 365):
+    if not (-5 <= az_int <= 365):
         print(f"that won't be in our azimuthal range for the whole integration!")
-    if !(-5 <= az_now <= 365):
+    if not (-5 <= az_now <= 365):
         print(f"that's outside our azimuthal range right now. try something else!")
     
     return False
