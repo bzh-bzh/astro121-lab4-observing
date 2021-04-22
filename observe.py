@@ -183,6 +183,11 @@ def main(args):
     observing_plan = pd.read_csv(args.observing_plan_path)
     output_folder = args.output_folder
 
+    if args.max_time:
+        max_runtime = Time.now() + args.max_time * u.hour
+    else:
+        max_runtime = Time.now() + u.year
+
     # Create temp folder and output folder if they don't exist.
     if not os.path.exists(TMP_FOLDER):
         os.makedirs(TMP_FOLDER)
@@ -197,6 +202,10 @@ def main(args):
     try:
         # Start iterating from top to bottom through the observing plan.
         for i in range(len(observing_plan)):
+            # End the script early if we surpass the maximum runtime.
+            if Time.now() > max_runtime:
+                break
+
             observing_info = observing_plan.iloc[i]
             if observing_info['observed']:
                 print('Observing entry {} already observed; skipping.'.format(i))
@@ -248,5 +257,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('observing_plan_path', help='Path of observing plan CSV file.')
     parser.add_argument('output_folder', help='Path of output data folder.')
+    parser.add_argument('--max-time', help='Max script runtime in hours.')
     args = parser.parse_args()
     main(args)
