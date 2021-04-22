@@ -257,6 +257,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('observing_plan_path', help='Path of observing plan CSV file.')
     parser.add_argument('output_folder', help='Path of output data folder.')
-    parser.add_argument('--max-time', help='Max script runtime in hours.')
+    parser.add_argument('--max-time', help='Max script runtime in hours.', type=float)
     args = parser.parse_args()
     main(args)
