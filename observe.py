@@ -118,7 +118,7 @@ def take_all_spec(coord: astropy.coordinates.SkyCoord) -> Tuple[float, float]:
 def reduce_and_move_spectra(base_folder: str, coord: astropy.coordinates.SkyCoord):
     sf_name = coord.to_string() #turns l,b into a usable string
     sf_path = os.path.join(base_folder, sf_name)
-    os.mkdirs(sf_path) #makes a directory to sf_path
+    os.makedirs(sf_path) #makes a directory to sf_path
     for in_fits_path in os.listdir(TMP_FOLDER):
         if in_fits_path.endswith('.fits'):
             reduce_spectra(os.path.join(TMP_FOLDER, in_fits_path), os.path.join(sf_path, in_fits_path))
