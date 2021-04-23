@@ -91,6 +91,7 @@ def take_spec(noise: bool, lo_freq: float, int_time: float, coord: astropy.coord
 
 # Take all the spectra we need.
 def take_all_spec(coord: astropy.coordinates.SkyCoord) -> Tuple[float, float]:
+    global spec
     num_spectrometer_retries = 0
     while True:
         if num_spectrometer_retries >= 5:
