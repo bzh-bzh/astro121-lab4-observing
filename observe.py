@@ -37,14 +37,14 @@ We go from top to bottom in the observing plan so we can prioritize a coarse spa
 
 # Constants.
 # Not pre-divided by 2; do this in the code.
-BASE_LO_FREQ = 1420.4
+BASE_LO_FREQ = 1270
 SWITCHING_DFREQ = 2.369 # Corresponds to moving the spectrum to the left by 500 km/s.
 
 DISH_LOCATION = astropy.coordinates.EarthLocation(lat=ugradio.leo.lat * u.deg, lon=ugradio.leo.lon * u.deg, height=ugradio.leo.alt * u.meter)
 
 NOISE_INTEGRATION_TIME = 60 # seconds.
-NONOISE_INTEGRATION_TIME = 300
-SWITCHED_INTEGRATION_TIME = 300
+NONOISE_INTEGRATION_TIME = 600
+SWITCHED_INTEGRATION_TIME = 1
 TOTAL_INTEGRATION_TIME = NOISE_INTEGRATION_TIME + NONOISE_INTEGRATION_TIME + SWITCHED_INTEGRATION_TIME
 
 RESLEW_TIME = 10
@@ -255,6 +255,7 @@ def main(args):
                 observing_plan.at[i, 'alt_end'] = end_altaz[0]
                 observing_plan.at[i, 'az_end'] = end_altaz[1]
                 observing_plan.to_csv(args.observing_plan_path, index=False)
+            time.sleep(60)
     finally:
         print('Stowing telescope.')
         telescope.stow()
